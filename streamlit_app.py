@@ -72,8 +72,6 @@ div.stDownloadButton > button {
     border: none;
 }
 
-/* TABLAS TEXTO NEGRO */
-
 [data-testid="stDataFrame"] td {
     color:#000000 !important;
 }
@@ -150,28 +148,13 @@ total_campos = df_actual["Campo"].nunique() if not df_actual.empty else 0
 m1, m2, m3 = st.columns(3)
 
 with m1:
-    st.markdown(f"""
-    <div class="kpi-card">
-        <div class="kpi-label">Total de cupos</div>
-        <div class="kpi-value">{total_cupos}</div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.metric("Total de cupos", total_cupos)
 
 with m2:
-    st.markdown(f"""
-    <div class="kpi-card">
-        <div class="kpi-label">Registros cargados</div>
-        <div class="kpi-value">{total_registros}</div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.metric("Registros cargados", total_registros)
 
 with m3:
-    st.markdown(f"""
-    <div class="kpi-card">
-        <div class="kpi-label">Campos activos</div>
-        <div class="kpi-value">{total_campos}</div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.metric("Campos activos", total_campos)
 
 st.write("")
 
@@ -199,28 +182,45 @@ with col3:
     cupos = st.number_input("Cupos", min_value=0, step=1)
     estado = st.selectbox("Estado del cupo", estados)
 
-if st.button("Agregar fila"):
+# =============================
+# BOTONES
+# =============================
 
-    nueva_fila = pd.DataFrame(
-        [[fecha, campo, localidad, especie, destino, cupos, socio, estado]],
-        columns=[
-            "Fecha",
-            "Campo",
-            "Localidad",
-            "Especie",
-            "Destino",
-            "Cupos",
-            "Socio",
-            "Estado"
-        ]
-    )
+b1, b2, b3 = st.columns(3)
 
-    st.session_state.tabla = pd.concat(
-        [st.session_state.tabla, nueva_fila],
-        ignore_index=True
-    )
+with b1:
+    if st.button("Agregar fila"):
+        nueva_fila = pd.DataFrame(
+            [[fecha, campo, localidad, especie, destino, cupos, socio, estado]],
+            columns=[
+                "Fecha",
+                "Campo",
+                "Localidad",
+                "Especie",
+                "Destino",
+                "Cupos",
+                "Socio",
+                "Estado"
+            ]
+        )
 
-    st.rerun()
+        st.session_state.tabla = pd.concat(
+            [st.session_state.tabla, nueva_fila],
+            ignore_index=True
+        )
+
+        st.rerun()
+
+with b2:
+    if st.button("Eliminar última fila"):
+        if not st.session_state.tabla.empty:
+            st.session_state.tabla = st.session_state.tabla.iloc[:-1]
+            st.rerun()
+
+with b3:
+    if st.button("Resetear tabla"):
+        st.session_state.tabla = st.session_state.tabla.iloc[0:0]
+        st.rerun()
 
 st.markdown('</div>', unsafe_allow_html=True)
 
