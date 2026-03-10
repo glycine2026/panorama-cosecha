@@ -39,18 +39,39 @@ st.markdown("""
     color: #6b7280;
 }
 
-[data-testid="stDataFrame"] td {
-    color:#000000 !important;
+/* TABLA MÁS CLARA PARA CAPTURAS */
+
+[data-testid="stDataFrame"] {
+    background-color: white;
 }
 
 [data-testid="stDataFrame"] th {
-    color:#000000 !important;
-    font-weight:700;
+    background-color: #f3f4f6;
+    color: #000000 !important;
+    font-weight: 700;
+}
+
+[data-testid="stDataFrame"] td {
+    color: #000000 !important;
+    background-color: #ffffff;
+}
+
+/* bordes más definidos */
+
+[data-testid="stDataFrame"] table {
+    border: 1px solid #e5e7eb;
+}
+
+/* altura de fila mejor para capturas */
+
+[data-testid="stDataFrame"] td, 
+[data-testid="stDataFrame"] th {
+    padding-top: 10px;
+    padding-bottom: 10px;
 }
 
 </style>
 """, unsafe_allow_html=True)
-
 # =============================
 # CARGAR MAESTROS
 # =============================
