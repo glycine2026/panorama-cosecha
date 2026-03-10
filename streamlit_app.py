@@ -1,8 +1,6 @@
 import streamlit as st
 import pandas as pd
 from datetime import date
-import matplotlib.pyplot as plt
-from io import BytesIO
 
 st.set_page_config(page_title="Panorama de cosecha", page_icon="🌾", layout="wide")
 
@@ -52,42 +50,6 @@ st.markdown("""
 
 </style>
 """, unsafe_allow_html=True)
-
-# =============================
-# FUNCION GENERAR IMAGEN
-# =============================
-
-def generar_imagen(df):
-
-    df_img = df[["Campo","Especie","Cupos","Destino","Estado"]].copy()
-
-    fig, ax = plt.subplots(figsize=(12,4))
-
-    ax.axis('off')
-
-    tabla = ax.table(
-        cellText=df_img.values,
-        colLabels=df_img.columns,
-        loc='center'
-    )
-
-    tabla.auto_set_font_size(False)
-    tabla.set_fontsize(11)
-    tabla.scale(1,1.7)
-
-    for (row, col), cell in tabla.get_celld().items():
-
-        if row == 0:
-            cell.set_text_props(weight='bold', color='white')
-            cell.set_facecolor('#006651')
-
-    buffer = BytesIO()
-
-    plt.savefig(buffer, format="png", bbox_inches="tight", dpi=300)
-
-    buffer.seek(0)
-
-    return buffer
 
 # =============================
 # CARGAR MAESTROS
@@ -248,7 +210,11 @@ df_mostrar = st.session_state.tabla.copy()
 if not df_mostrar.empty:
     df_mostrar["Fecha"] = pd.to_datetime(df_mostrar["Fecha"]).dt.strftime("%d/%m/%Y")
 
-st.dataframe(df_mostrar,use_container_width=True,hide_index=True)
+st.dataframe(
+    df_mostrar,
+    use_container_width=True,
+    hide_index=True
+)
 
 st.markdown('</div>', unsafe_allow_html=True)
 
@@ -270,22 +236,11 @@ if not st.session_state.tabla.empty:
 
     resumen["Fecha"] = pd.to_datetime(resumen["Fecha"]).dt.strftime("%d/%m/%Y")
 
-    st.dataframe(resumen,use_container_width=True,hide_index=True)
-
-st.markdown('</div>', unsafe_allow_html=True)
-
-# =============================
-# IMAGEN PARA WHATSAPP
-# =============================
-
-st.markdown('<div class="card">', unsafe_allow_html=True)
-st.markdown('<div class="section-title">Vista para compartir</div>', unsafe_allow_html=True)
-
-if not st.session_state.tabla.empty:
-
-    img_buffer = generar_imagen(st.session_state.tabla)
-
-    st.image(img_buffer,caption="Imagen lista para enviar por WhatsApp")
+    st.dataframe(
+        resumen,
+        use_container_width=True,
+        hide_index=True
+    )
 
 st.markdown('</div>', unsafe_allow_html=True)
 
