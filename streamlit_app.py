@@ -182,6 +182,21 @@ with b3:
 st.markdown('</div>', unsafe_allow_html=True)
 
 # =============================
+# FUNCION COLOR ESTADO
+# =============================
+
+def color_estado(val):
+    if val == "Confirmado con Cupo":
+        return "background-color:#d1fae5; font-weight:600;"
+    elif val == "Confirmado sin Cupo":
+        return "background-color:#fef3c7; font-weight:600;"
+    elif val == "Solicitado":
+        return "background-color:#fef3c7; font-weight:600;"
+    elif val == "Cancelado":
+        return "background-color:#fee2e2; font-weight:600;"
+    return ""
+
+# =============================
 # TABLA PRINCIPAL
 # =============================
 
@@ -195,24 +210,34 @@ if not df_mostrar.empty:
 
 tabla_estilo = (
     df_mostrar.style
+    .hide(axis="index")
+    .set_properties(**{
+        "text-align": "center",
+        "font-size": "13px"
+    })
     .set_table_styles([
-        {"selector": "th",
-         "props": [
-             ("background-color", "#f3f4f6"),
-             ("color", "#000000"),
-             ("font-weight", "bold"),
-             ("border", "1px solid #d1d5db"),
-             ("padding", "10px")
-         ]},
-
-        {"selector": "td",
-         "props": [
-             ("background-color", "#ffffff"),
-             ("color", "#000000"),
-             ("border", "1px solid #e5e7eb"),
-             ("padding", "10px")
-         ]}
+        {
+            "selector": "th",
+            "props": [
+                ("background-color", "#f3f4f6"),
+                ("color", "#000000"),
+                ("font-weight", "bold"),
+                ("text-align", "center"),
+                ("border", "1px solid #d1d5db"),
+                ("padding", "4px")
+            ]
+        },
+        {
+            "selector": "td",
+            "props": [
+                ("background-color", "#ffffff"),
+                ("color", "#000000"),
+                ("border", "1px solid #e5e7eb"),
+                ("padding", "4px")
+            ]
+        }
     ])
+    .applymap(color_estado, subset=["Estado"])
 )
 
 st.table(tabla_estilo)
@@ -237,29 +262,7 @@ if not st.session_state.tabla.empty:
 
     resumen["Fecha"] = pd.to_datetime(resumen["Fecha"]).dt.strftime("%d/%m/%Y")
 
-    resumen_estilo = (
-        resumen.style
-        .set_table_styles([
-            {"selector": "th",
-             "props": [
-                 ("background-color", "#f3f4f6"),
-                 ("color", "#000000"),
-                 ("font-weight", "bold"),
-                 ("border", "1px solid #d1d5db"),
-                 ("padding", "10px")
-             ]},
-
-            {"selector": "td",
-             "props": [
-                 ("background-color", "#ffffff"),
-                 ("color", "#000000"),
-                 ("border", "1px solid #e5e7eb"),
-                 ("padding", "10px")
-             ]}
-        ])
-    )
-
-    st.table(resumen_estilo)
+    st.table(resumen)
 
 st.markdown('</div>', unsafe_allow_html=True)
 
