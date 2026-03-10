@@ -114,15 +114,18 @@ if "tabla" not in st.session_state:
 # =============================
 # HEADER
 # =============================
-logo_col, titulo_col = st.columns([1, 7])
+logo_col, titulo_col = st.columns([1.5,6])
 
 with logo_col:
-    st.image("logo.png", width=110)
+    st.image("logo.png", width=150)
 
 with titulo_col:
-    st.markdown('<div class="report-title">Panorama de cosecha</div>', unsafe_allow_html=True)
-    st.markdown('<div class="report-subtitle">Reporte operativo institucional</div>', unsafe_allow_html=True)
-
+    st.markdown("""
+    <div style="padding-top:15px">
+        <div class="report-title">Panorama de cosecha</div>
+        <div class="report-subtitle">Reporte operativo institucional</div>
+    </div>
+    """, unsafe_allow_html=True)
 st.write("")
 
 # =============================
