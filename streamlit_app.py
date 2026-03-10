@@ -97,7 +97,7 @@ with titulo_col:
     st.markdown("""
     <div style="padding-top:20px">
         <div class="report-title">Panorama de cosecha</div>
-        <div class="report-subtitle">Reporte operativo institucional</div>
+        <div class="report-subtitle">Distribución de camiones</div>
     </div>
     """, unsafe_allow_html=True)
 
