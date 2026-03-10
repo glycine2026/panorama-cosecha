@@ -6,15 +6,18 @@ st.set_page_config(page_title="Panorama de cosecha", page_icon="🌾", layout="w
 
 st.title("Panorama de cosecha")
 
-# listas iniciales (después las vamos a leer desde un Excel)
-campos = ["Campo Norte", "Campo Sur", "Campo Este"]
-localidades = ["Pergamino", "Rojas", "Junin"]
+# leer excel de maestros
+maestros = pd.read_excel("maestros.xlsx", sheet_name="campos_localidades")
+
+# listas desde excel
+campos = sorted(maestros["Campo"].dropna().unique().tolist())
+localidades = sorted(maestros["Localidad"].dropna().unique().tolist())
+
 socios = ["Socio A", "Socio B", "Socio C"]
 
-# crear tabla en memoria
 if "tabla" not in st.session_state:
     st.session_state.tabla = pd.DataFrame(
-        columns=["Fecha","Campo","Localidad","Destino","Cupos","Socio"]
+        columns=["Fecha", "Campo", "Localidad", "Destino", "Cupos", "Socio"]
     )
 
 st.subheader("Carga de datos")
@@ -34,10 +37,9 @@ with col3:
     cupos = st.number_input("Cupos", min_value=0)
 
 if st.button("Agregar fila"):
-
     nueva_fila = pd.DataFrame(
-        [[fecha,campo,localidad,destino,cupos,socio]],
-        columns=["Fecha","Campo","Localidad","Destino","Cupos","Socio"]
+        [[fecha, campo, localidad, destino, cupos, socio]],
+        columns=["Fecha", "Campo", "Localidad", "Destino", "Cupos", "Socio"]
     )
 
     st.session_state.tabla = pd.concat(
@@ -46,10 +48,8 @@ if st.button("Agregar fila"):
     )
 
 st.subheader("Panorama cargado")
-
 st.dataframe(st.session_state.tabla, use_container_width=True)
 
-# descarga
 csv = st.session_state.tabla.to_csv(index=False).encode("utf-8")
 
 st.download_button(
