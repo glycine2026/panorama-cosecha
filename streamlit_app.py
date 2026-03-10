@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 from datetime import date
+import matplotlib.pyplot as plt
+from io import BytesIO
 
 st.set_page_config(page_title="Panorama de cosecha", page_icon="🌾", layout="wide")
 
@@ -29,25 +31,6 @@ st.markdown("""
     margin-bottom: 0.8rem;
 }
 
-.kpi-card {
-    background-color: white;
-    padding: 1rem;
-    border-radius: 14px;
-    border-left: 6px solid #006651;
-    box-shadow: 0 1px 6px rgba(0,0,0,0.05);
-}
-
-.kpi-label {
-    color: #6b7280;
-    font-size: 0.9rem;
-}
-
-.kpi-value {
-    color: #1F2933;
-    font-size: 1.6rem;
-    font-weight: 700;
-}
-
 .report-title {
     color: #006651;
     font-size: 2.4rem;
@@ -56,20 +39,6 @@ st.markdown("""
 
 .report-subtitle {
     color: #6b7280;
-}
-
-div.stButton > button {
-    background-color: #006651;
-    color: white;
-    border-radius: 10px;
-    border: none;
-}
-
-div.stDownloadButton > button {
-    background-color: #006651;
-    color: white;
-    border-radius: 10px;
-    border: none;
 }
 
 [data-testid="stDataFrame"] td {
@@ -83,6 +52,42 @@ div.stDownloadButton > button {
 
 </style>
 """, unsafe_allow_html=True)
+
+# =============================
+# FUNCION GENERAR IMAGEN
+# =============================
+
+def generar_imagen(df):
+
+    df_img = df[["Campo","Especie","Cupos","Destino","Estado"]].copy()
+
+    fig, ax = plt.subplots(figsize=(12,4))
+
+    ax.axis('off')
+
+    tabla = ax.table(
+        cellText=df_img.values,
+        colLabels=df_img.columns,
+        loc='center'
+    )
+
+    tabla.auto_set_font_size(False)
+    tabla.set_fontsize(11)
+    tabla.scale(1,1.7)
+
+    for (row, col), cell in tabla.get_celld().items():
+
+        if row == 0:
+            cell.set_text_props(weight='bold', color='white')
+            cell.set_facecolor('#006651')
+
+    buffer = BytesIO()
+
+    plt.savefig(buffer, format="png", bbox_inches="tight", dpi=300)
+
+    buffer.seek(0)
+
+    return buffer
 
 # =============================
 # CARGAR MAESTROS
@@ -103,6 +108,7 @@ estados = sorted(estado_df["Estado"].dropna().unique())
 # =============================
 
 if "tabla" not in st.session_state:
+
     st.session_state.tabla = pd.DataFrame(
         columns=[
             "Fecha",
@@ -189,9 +195,11 @@ with col3:
 b1, b2, b3 = st.columns(3)
 
 with b1:
+
     if st.button("Agregar fila"):
+
         nueva_fila = pd.DataFrame(
-            [[fecha, campo, localidad, especie, destino, cupos, socio, estado]],
+            [[fecha,campo,localidad,especie,destino,cupos,socio,estado]],
             columns=[
                 "Fecha",
                 "Campo",
@@ -205,20 +213,24 @@ with b1:
         )
 
         st.session_state.tabla = pd.concat(
-            [st.session_state.tabla, nueva_fila],
+            [st.session_state.tabla,nueva_fila],
             ignore_index=True
         )
 
         st.rerun()
 
 with b2:
+
     if st.button("Eliminar última fila"):
+
         if not st.session_state.tabla.empty:
             st.session_state.tabla = st.session_state.tabla.iloc[:-1]
             st.rerun()
 
 with b3:
+
     if st.button("Resetear tabla"):
+
         st.session_state.tabla = st.session_state.tabla.iloc[0:0]
         st.rerun()
 
@@ -236,11 +248,7 @@ df_mostrar = st.session_state.tabla.copy()
 if not df_mostrar.empty:
     df_mostrar["Fecha"] = pd.to_datetime(df_mostrar["Fecha"]).dt.strftime("%d/%m/%Y")
 
-st.dataframe(
-    df_mostrar,
-    use_container_width=True,
-    hide_index=True
-)
+st.dataframe(df_mostrar,use_container_width=True,hide_index=True)
 
 st.markdown('</div>', unsafe_allow_html=True)
 
@@ -262,16 +270,27 @@ if not st.session_state.tabla.empty:
 
     resumen["Fecha"] = pd.to_datetime(resumen["Fecha"]).dt.strftime("%d/%m/%Y")
 
-    st.dataframe(
-        resumen,
-        use_container_width=True,
-        hide_index=True
-    )
+    st.dataframe(resumen,use_container_width=True,hide_index=True)
 
 st.markdown('</div>', unsafe_allow_html=True)
 
 # =============================
-# DESCARGA
+# IMAGEN PARA WHATSAPP
+# =============================
+
+st.markdown('<div class="card">', unsafe_allow_html=True)
+st.markdown('<div class="section-title">Vista para compartir</div>', unsafe_allow_html=True)
+
+if not st.session_state.tabla.empty:
+
+    img_buffer = generar_imagen(st.session_state.tabla)
+
+    st.image(img_buffer,caption="Imagen lista para enviar por WhatsApp")
+
+st.markdown('</div>', unsafe_allow_html=True)
+
+# =============================
+# DESCARGA CSV
 # =============================
 
 csv = st.session_state.tabla.to_csv(index=False).encode("utf-8-sig")
