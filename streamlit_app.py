@@ -4,7 +4,13 @@ from datetime import date
 
 st.set_page_config(page_title="Panorama de cosecha", page_icon="🌾", layout="wide")
 
-st.title("Panorama de cosecha")
+logo_col, titulo_col = st.columns([1,6])
+
+with logo_col:
+    st.image("logo.png", width=120)
+
+with titulo_col:
+    st.title("Panorama de cosecha")
 
 # =============================
 # CARGAR MAESTROS DESDE EXCEL
