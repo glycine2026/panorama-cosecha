@@ -70,7 +70,6 @@ estados = sorted(estado_df["Estado"].dropna().unique())
 # =============================
 
 if "tabla" not in st.session_state:
-
     st.session_state.tabla = pd.DataFrame(
         columns=[
             "Fecha",
@@ -85,13 +84,13 @@ if "tabla" not in st.session_state:
     )
 
 # =============================
-# HEADER
+# HEADER (LOGO + TITULO)
 # =============================
 
-logo_col, titulo_col = st.columns([1.5,6])
+logo_col, titulo_col = st.columns([3,6])
 
 with logo_col:
-    st.image("logo.png", width=150)
+    st.image("logo.png", use_container_width=True)
 
 with titulo_col:
     st.markdown("""
@@ -157,7 +156,6 @@ with col3:
 b1, b2, b3 = st.columns(3)
 
 with b1:
-
     if st.button("Agregar fila"):
 
         nueva_fila = pd.DataFrame(
@@ -182,17 +180,13 @@ with b1:
         st.rerun()
 
 with b2:
-
     if st.button("Eliminar última fila"):
-
         if not st.session_state.tabla.empty:
             st.session_state.tabla = st.session_state.tabla.iloc[:-1]
             st.rerun()
 
 with b3:
-
     if st.button("Resetear tabla"):
-
         st.session_state.tabla = st.session_state.tabla.iloc[0:0]
         st.rerun()
 
