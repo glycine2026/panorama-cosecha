@@ -240,10 +240,9 @@ tabla_estilo = (
     .applymap(color_estado, subset=["Estado"])
 )
 
-st.table(tabla_estilo)
+st.markdown(tabla_estilo.to_html(), unsafe_allow_html=True)
 
 st.markdown('</div>', unsafe_allow_html=True)
-
 # =============================
 # RESUMEN
 # =============================
