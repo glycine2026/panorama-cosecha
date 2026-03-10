@@ -7,19 +7,20 @@ st.set_page_config(page_title="Panorama de cosecha", page_icon="🌾", layout="w
 # =============================
 # ESTILOS
 # =============================
+
 st.markdown("""
 <style>
+
 .block-container {
     padding-top: 2rem;
-    padding-bottom: 2rem;
 }
 
 .card {
     background-color: white;
     padding: 1.4rem;
-    border-radius: 16px;
+    border-radius: 14px;
     box-shadow: 0 1px 8px rgba(0,0,0,0.06);
-    margin-bottom: 1.2rem;
+    margin-bottom: 1rem;
 }
 
 .section-title {
@@ -30,16 +31,15 @@ st.markdown("""
 
 .kpi-card {
     background-color: white;
-    padding: 1rem 1.2rem;
+    padding: 1rem;
     border-radius: 14px;
-    box-shadow: 0 1px 6px rgba(0,0,0,0.05);
     border-left: 6px solid #006651;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.05);
 }
 
 .kpi-label {
     color: #6b7280;
     font-size: 0.9rem;
-    margin-bottom: 0.2rem;
 }
 
 .kpi-value {
@@ -50,15 +50,12 @@ st.markdown("""
 
 .report-title {
     color: #006651;
-    font-weight: 800;
     font-size: 2.4rem;
-    margin-top: 0.4rem;
+    font-weight: 800;
 }
 
 .report-subtitle {
     color: #6b7280;
-    font-size: 1rem;
-    margin-top: -0.2rem;
 }
 
 div.stButton > button {
@@ -66,8 +63,6 @@ div.stButton > button {
     color: white;
     border-radius: 10px;
     border: none;
-    padding: 0.6rem 1rem;
-    font-weight: 600;
 }
 
 div.stDownloadButton > button {
@@ -75,15 +70,26 @@ div.stDownloadButton > button {
     color: white;
     border-radius: 10px;
     border: none;
-    padding: 0.6rem 1rem;
-    font-weight: 600;
 }
+
+/* TABLAS TEXTO NEGRO */
+
+[data-testid="stDataFrame"] td {
+    color:#000000 !important;
+}
+
+[data-testid="stDataFrame"] th {
+    color:#000000 !important;
+    font-weight:700;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
 # =============================
 # CARGAR MAESTROS
 # =============================
+
 campos_loc = pd.read_excel("maestros.xlsx", sheet_name="campos_localidades")
 socios_df = pd.read_excel("maestros.xlsx", sheet_name="socios")
 especies_df = pd.read_excel("maestros.xlsx", sheet_name="especies")
@@ -97,6 +103,7 @@ estados = sorted(estado_df["Estado"].dropna().unique())
 # =============================
 # TABLA EN MEMORIA
 # =============================
+
 if "tabla" not in st.session_state:
     st.session_state.tabla = pd.DataFrame(
         columns=[
@@ -114,6 +121,7 @@ if "tabla" not in st.session_state:
 # =============================
 # HEADER
 # =============================
+
 logo_col, titulo_col = st.columns([1.5,6])
 
 with logo_col:
@@ -121,17 +129,19 @@ with logo_col:
 
 with titulo_col:
     st.markdown("""
-    <div style="padding-top:15px">
+    <div style="padding-top:20px">
         <div class="report-title">Panorama de cosecha</div>
         <div class="report-subtitle">Reporte operativo institucional</div>
     </div>
     """, unsafe_allow_html=True)
+
 st.write("")
 
 # =============================
 # METRICAS
 # =============================
-df_actual = st.session_state.tabla.copy()
+
+df_actual = st.session_state.tabla
 
 total_cupos = int(df_actual["Cupos"].sum()) if not df_actual.empty else 0
 total_registros = len(df_actual)
@@ -166,8 +176,9 @@ with m3:
 st.write("")
 
 # =============================
-# CARGA DE DATOS
+# FORMULARIO
 # =============================
+
 st.markdown('<div class="card">', unsafe_allow_html=True)
 st.markdown('<div class="section-title">Carga de datos</div>', unsafe_allow_html=True)
 
@@ -189,6 +200,7 @@ with col3:
     estado = st.selectbox("Estado del cupo", estados)
 
 if st.button("Agregar fila"):
+
     nueva_fila = pd.DataFrame(
         [[fecha, campo, localidad, especie, destino, cupos, socio, estado]],
         columns=[
@@ -207,13 +219,15 @@ if st.button("Agregar fila"):
         [st.session_state.tabla, nueva_fila],
         ignore_index=True
     )
+
     st.rerun()
 
 st.markdown('</div>', unsafe_allow_html=True)
 
 # =============================
-# TABLA REPORTE
+# TABLA PRINCIPAL
 # =============================
+
 st.markdown('<div class="card">', unsafe_allow_html=True)
 st.markdown('<div class="section-title">Panorama cargado</div>', unsafe_allow_html=True)
 
@@ -228,14 +242,43 @@ st.dataframe(
     hide_index=True
 )
 
+st.markdown('</div>', unsafe_allow_html=True)
+
+# =============================
+# RESUMEN
+# =============================
+
+st.markdown('<div class="card">', unsafe_allow_html=True)
+st.markdown('<div class="section-title">Resumen por socio y especie</div>', unsafe_allow_html=True)
+
+if not st.session_state.tabla.empty:
+
+    resumen = (
+        st.session_state.tabla
+        .groupby(["Fecha","Socio","Especie"])["Cupos"]
+        .sum()
+        .reset_index()
+    )
+
+    resumen["Fecha"] = pd.to_datetime(resumen["Fecha"]).dt.strftime("%d/%m/%Y")
+
+    st.dataframe(
+        resumen,
+        use_container_width=True,
+        hide_index=True
+    )
+
+st.markdown('</div>', unsafe_allow_html=True)
+
+# =============================
+# DESCARGA
+# =============================
+
 csv = st.session_state.tabla.to_csv(index=False).encode("utf-8-sig")
 
-st.write("")
 st.download_button(
     "Descargar CSV",
     csv,
     "panorama_cosecha.csv",
     "text/csv"
 )
-
-st.markdown('</div>', unsafe_allow_html=True)
