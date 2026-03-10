@@ -84,24 +84,21 @@ if "tabla" not in st.session_state:
     )
 
 # =============================
-# HEADER (LOGO + TITULO)
+# HEADER
 # =============================
 
-logo_col, titulo_col = st.columns([3,6])
+logo_col, titulo_col = st.columns([1.5,6])
 
 with logo_col:
-    st.image("logo.png", use_container_width=True)
+    st.image("logo.png", width=220)
 
 with titulo_col:
     st.markdown("""
-    <div style="padding-top:20px">
+    <div style="padding-top:25px">
         <div class="report-title">Panorama de cosecha</div>
         <div class="report-subtitle">Distribución de camiones</div>
     </div>
     """, unsafe_allow_html=True)
-
-st.write("")
-
 # =============================
 # METRICAS
 # =============================
