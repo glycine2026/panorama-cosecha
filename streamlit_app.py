@@ -39,39 +39,9 @@ st.markdown("""
     color: #6b7280;
 }
 
-/* TABLA MÁS CLARA PARA CAPTURAS */
-
-[data-testid="stDataFrame"] {
-    background-color: white;
-}
-
-[data-testid="stDataFrame"] th {
-    background-color: #f3f4f6;
-    color: #000000 !important;
-    font-weight: 700;
-}
-
-[data-testid="stDataFrame"] td {
-    color: #000000 !important;
-    background-color: #ffffff;
-}
-
-/* bordes más definidos */
-
-[data-testid="stDataFrame"] table {
-    border: 1px solid #e5e7eb;
-}
-
-/* altura de fila mejor para capturas */
-
-[data-testid="stDataFrame"] td, 
-[data-testid="stDataFrame"] th {
-    padding-top: 10px;
-    padding-bottom: 10px;
-}
-
 </style>
 """, unsafe_allow_html=True)
+
 # =============================
 # CARGAR MAESTROS
 # =============================
@@ -120,6 +90,7 @@ with titulo_col:
         <div class="report-subtitle">Distribución de camiones</div>
     </div>
     """, unsafe_allow_html=True)
+
 # =============================
 # METRICAS
 # =============================
@@ -222,11 +193,29 @@ df_mostrar = st.session_state.tabla.copy()
 if not df_mostrar.empty:
     df_mostrar["Fecha"] = pd.to_datetime(df_mostrar["Fecha"]).dt.strftime("%d/%m/%Y")
 
-st.dataframe(
-    df_mostrar,
-    use_container_width=True,
-    hide_index=True
+tabla_estilo = (
+    df_mostrar.style
+    .set_table_styles([
+        {"selector": "th",
+         "props": [
+             ("background-color", "#f3f4f6"),
+             ("color", "#000000"),
+             ("font-weight", "bold"),
+             ("border", "1px solid #d1d5db"),
+             ("padding", "10px")
+         ]},
+
+        {"selector": "td",
+         "props": [
+             ("background-color", "#ffffff"),
+             ("color", "#000000"),
+             ("border", "1px solid #e5e7eb"),
+             ("padding", "10px")
+         ]}
+    ])
 )
+
+st.table(tabla_estilo)
 
 st.markdown('</div>', unsafe_allow_html=True)
 
@@ -248,11 +237,29 @@ if not st.session_state.tabla.empty:
 
     resumen["Fecha"] = pd.to_datetime(resumen["Fecha"]).dt.strftime("%d/%m/%Y")
 
-    st.dataframe(
-        resumen,
-        use_container_width=True,
-        hide_index=True
+    resumen_estilo = (
+        resumen.style
+        .set_table_styles([
+            {"selector": "th",
+             "props": [
+                 ("background-color", "#f3f4f6"),
+                 ("color", "#000000"),
+                 ("font-weight", "bold"),
+                 ("border", "1px solid #d1d5db"),
+                 ("padding", "10px")
+             ]},
+
+            {"selector": "td",
+             "props": [
+                 ("background-color", "#ffffff"),
+                 ("color", "#000000"),
+                 ("border", "1px solid #e5e7eb"),
+                 ("padding", "10px")
+             ]}
+        ])
     )
+
+    st.table(resumen_estilo)
 
 st.markdown('</div>', unsafe_allow_html=True)
 
