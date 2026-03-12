@@ -1,8 +1,14 @@
 import streamlit as st
 import pandas as pd
-from datetime import date
+from datetime import date, datetime
 
 st.set_page_config(page_title="Panorama de cosecha", page_icon="🌾", layout="wide")
+
+# =============================
+# FECHA CREACION
+# =============================
+
+fecha_creacion = datetime.now().strftime("%d/%m/%Y")
 
 # =============================
 # ESTILOS
@@ -67,10 +73,12 @@ if "tabla" not in st.session_state:
             "Campo",
             "Localidad",
             "Especie",
+            "Transporte",
             "Destino",
             "Cupos",
             "Socio",
-            "Estado"
+            "Estado",
+            "Observaciones"
         ]
     )
 
@@ -84,10 +92,11 @@ with logo_col:
     st.image("logo.png", width=220)
 
 with titulo_col:
-    st.markdown("""
+    st.markdown(f"""
     <div style="padding-top:25px">
         <div class="report-title">Panorama de cosecha</div>
         <div class="report-subtitle">Distribución de camiones</div>
+        <div class="report-subtitle">Creado el: {fecha_creacion}</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -134,9 +143,13 @@ with col2:
     socio = st.selectbox("Socio", socios)
 
 with col3:
+    transporte = st.selectbox("Tipo transporte", ["Camión","Bolsón"])
     destino = st.text_input("Destino")
     cupos = st.number_input("Cupos", min_value=0, step=1)
-    estado = st.selectbox("Estado del cupo", estados)
+
+estado = st.selectbox("Estado del cupo", estados)
+
+observaciones = st.text_input("Observaciones")
 
 # =============================
 # BOTONES
@@ -148,16 +161,10 @@ with b1:
     if st.button("Agregar fila"):
 
         nueva_fila = pd.DataFrame(
-            [[fecha,campo,localidad,especie,destino,cupos,socio,estado]],
+            [[fecha,campo,localidad,especie,transporte,destino,cupos,socio,estado,observaciones]],
             columns=[
-                "Fecha",
-                "Campo",
-                "Localidad",
-                "Especie",
-                "Destino",
-                "Cupos",
-                "Socio",
-                "Estado"
+                "Fecha","Campo","Localidad","Especie","Transporte",
+                "Destino","Cupos","Socio","Estado","Observaciones"
             ]
         )
 
@@ -182,18 +189,23 @@ with b3:
 st.markdown('</div>', unsafe_allow_html=True)
 
 # =============================
-# FUNCION COLOR ESTADO
+# COLOR ESTADO
 # =============================
 
 def color_estado(val):
+
     if val == "Confirmado con Cupo":
         return "background-color:#d1fae5; font-weight:600;"
+
     elif val == "Confirmado sin Cupo":
         return "background-color:#fef3c7; font-weight:600;"
+
     elif val == "Solicitado":
         return "background-color:#fef3c7; font-weight:600;"
+
     elif val == "Cancelado":
         return "background-color:#fee2e2; font-weight:600;"
+
     return ""
 
 # =============================
@@ -203,46 +215,54 @@ def color_estado(val):
 st.markdown('<div class="card">', unsafe_allow_html=True)
 st.markdown('<div class="section-title">Panorama cargado</div>', unsafe_allow_html=True)
 
-df_mostrar = st.session_state.tabla.copy()
+tabla_col, logo_col = st.columns([7,1])
 
-if not df_mostrar.empty:
-    df_mostrar["Fecha"] = pd.to_datetime(df_mostrar["Fecha"]).dt.strftime("%d/%m/%Y")
+with tabla_col:
 
-tabla_estilo = (
-    df_mostrar.style
-    .hide(axis="index")
-    .set_properties(**{
-        "text-align": "center",
-        "font-size": "13px"
-    })
-    .set_table_styles([
-        {
-            "selector": "th",
-            "props": [
-                ("background-color", "#f3f4f6"),
-                ("color", "#000000"),
-                ("font-weight", "bold"),
-                ("text-align", "center"),
-                ("border", "1px solid #d1d5db"),
-                ("padding", "4px")
-            ]
-        },
-        {
-            "selector": "td",
-            "props": [
-                ("background-color", "#ffffff"),
-                ("color", "#000000"),
-                ("border", "1px solid #e5e7eb"),
-                ("padding", "4px")
-            ]
-        }
-    ])
-    .applymap(color_estado, subset=["Estado"])
-)
+    df_mostrar = st.session_state.tabla.copy()
 
-st.markdown(tabla_estilo.to_html(), unsafe_allow_html=True)
+    if not df_mostrar.empty:
+        df_mostrar["Fecha"] = pd.to_datetime(df_mostrar["Fecha"]).dt.strftime("%d/%m/%Y")
+
+    tabla_estilo = (
+        df_mostrar.style
+        .hide(axis="index")
+        .set_properties(**{
+            "text-align": "center",
+            "font-size": "13px"
+        })
+        .set_table_styles([
+            {
+                "selector": "th",
+                "props": [
+                    ("background-color", "#f3f4f6"),
+                    ("color", "#000000"),
+                    ("font-weight", "bold"),
+                    ("text-align", "center"),
+                    ("border", "1px solid #d1d5db"),
+                    ("padding", "4px")
+                ]
+            },
+            {
+                "selector": "td",
+                "props": [
+                    ("background-color", "#ffffff"),
+                    ("color", "#000000"),
+                    ("border", "1px solid #e5e7eb"),
+                    ("padding", "4px")
+                ]
+            }
+        ])
+        .applymap(color_estado, subset=["Estado"])
+    )
+
+    st.markdown(tabla_estilo.to_html(), unsafe_allow_html=True)
+
+with logo_col:
+    st.image("logo.png", width=120)
 
 st.markdown('</div>', unsafe_allow_html=True)
+
 # =============================
 # RESUMEN
 # =============================
@@ -269,11 +289,13 @@ st.markdown('</div>', unsafe_allow_html=True)
 # DESCARGA CSV
 # =============================
 
+fecha_archivo = datetime.now().strftime("%Y-%m-%d")
+
 csv = st.session_state.tabla.to_csv(index=False).encode("utf-8-sig")
 
 st.download_button(
-    "Descargar CSV",
+    "Descargar Excel",
     csv,
-    "panorama_cosecha.csv",
+    f"panorama_cosecha_{fecha_archivo}.csv",
     "text/csv"
 )
