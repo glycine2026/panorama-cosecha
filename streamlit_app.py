@@ -2,12 +2,9 @@ import streamlit as st
 import pandas as pd
 from datetime import date, datetime
 import matplotlib.pyplot as plt
+import io
 
 st.set_page_config(page_title="Panorama de cosecha", page_icon="🌾", layout="wide")
-
-# =============================
-# FECHA CREACION
-# =============================
 
 fecha_creacion = datetime.now().strftime("%d/%m/%Y")
 
@@ -24,21 +21,21 @@ st.markdown("""
 
 .card {
     background-color: white;
-    padding: 1.4rem;
-    border-radius: 14px;
-    box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+    padding: 1.2rem;
+    border-radius: 10px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.06);
     margin-bottom: 1rem;
 }
 
 .section-title {
     color: #006651;
     font-weight: 700;
-    margin-bottom: 0.8rem;
+    margin-bottom: 0.6rem;
 }
 
 .report-title {
     color: #006651;
-    font-size: 2.4rem;
+    font-size: 2.2rem;
     font-weight: 800;
 }
 
@@ -68,20 +65,11 @@ estados = sorted(estado_df["Estado"].dropna().unique())
 # =============================
 
 if "tabla" not in st.session_state:
-    st.session_state.tabla = pd.DataFrame(
-        columns=[
-            "Fecha",
-            "Campo",
-            "Localidad",
-            "Especie",
-            "Transporte",
-            "Destino",
-            "Cupos",
-            "Socio",
-            "Estado",
-            "Observaciones"
-        ]
-    )
+    st.session_state.tabla = pd.DataFrame(columns=[
+        "Fecha","Campo","Localidad","Especie",
+        "Transporte","Destino","Cupos","Socio",
+        "Estado","Observaciones"
+    ])
 
 # =============================
 # HEADER
@@ -94,7 +82,7 @@ with logo_col:
 
 with titulo_col:
     st.markdown(f"""
-    <div style="padding-top:25px">
+    <div style="padding-top:20px">
         <div class="report-title">Panorama de cosecha</div>
         <div class="report-subtitle">Distribución de camiones</div>
         <div class="report-subtitle">Creado el: {fecha_creacion}</div>
@@ -131,37 +119,36 @@ st.write("")
 st.markdown('<div class="card">', unsafe_allow_html=True)
 st.markdown('<div class="section-title">Carga de datos</div>', unsafe_allow_html=True)
 
-col1, col2, col3 = st.columns(3)
+c1,c2,c3 = st.columns(3)
 
-with col1:
+with c1:
     fecha = st.date_input("Fecha", value=date.today())
     campo = st.selectbox("Campo", campos)
     especie = st.selectbox("Especie", especies)
 
-with col2:
-    localidades_filtradas = campos_loc[campos_loc["Campo"] == campo]["Localidad"].dropna().unique()
-    localidad = st.selectbox("Localidad", sorted(localidades_filtradas))
+with c2:
+    localidades = campos_loc[campos_loc["Campo"]==campo]["Localidad"].dropna().unique()
+    localidad = st.selectbox("Localidad", sorted(localidades))
     socio = st.selectbox("Socio", socios)
 
-with col3:
+with c3:
     transporte = st.selectbox("Tipo transporte", ["Camión","Bolsón"])
     destino = st.text_input("Destino")
     cupos = st.number_input("Cupos", min_value=0, step=1)
 
 estado = st.selectbox("Estado del cupo", estados)
-
 observaciones = st.text_input("Observaciones")
 
 # =============================
 # BOTONES
 # =============================
 
-b1, b2, b3 = st.columns(3)
+b1,b2,b3 = st.columns(3)
 
 with b1:
     if st.button("Agregar fila"):
 
-        nueva_fila = pd.DataFrame(
+        nueva = pd.DataFrame(
             [[fecha,campo,localidad,especie,transporte,destino,cupos,socio,estado,observaciones]],
             columns=[
                 "Fecha","Campo","Localidad","Especie","Transporte",
@@ -169,11 +156,7 @@ with b1:
             ]
         )
 
-        st.session_state.tabla = pd.concat(
-            [st.session_state.tabla,nueva_fila],
-            ignore_index=True
-        )
-
+        st.session_state.tabla = pd.concat([st.session_state.tabla,nueva], ignore_index=True)
         st.rerun()
 
 with b2:
@@ -190,34 +173,80 @@ with b3:
 st.markdown('</div>', unsafe_allow_html=True)
 
 # =============================
+# COLOR ESTADO
+# =============================
+
+def color_estado(val):
+
+    if val == "Confirmado con Cupo":
+        return "background-color:#d1fae5;font-weight:bold"
+
+    if val == "Confirmado sin Cupo":
+        return "background-color:#fef3c7;font-weight:bold"
+
+    if val == "Solicitado":
+        return "background-color:#fef3c7;font-weight:bold"
+
+    if val == "Cancelado":
+        return "background-color:#fee2e2;font-weight:bold"
+
+    return ""
+
+# =============================
 # TABLA PRINCIPAL
 # =============================
 
 st.markdown('<div class="card">', unsafe_allow_html=True)
 
-titulo_col, logo_col = st.columns([6,1])
+titulo,logo = st.columns([6,1])
 
-with titulo_col:
+with titulo:
     st.markdown(f"""
-    <div style="margin-bottom:10px">
-        <div style="font-weight:700;font-size:18px;color:#006651">
-        Distribución de camiones
-        </div>
-        <div style="color:#6b7280;font-size:13px">
-        Creado el: {fecha_creacion}
-        </div>
+    <div style="font-weight:700;font-size:18px;color:#006651">
+    Distribución de camiones
+    </div>
+    <div style="color:#6b7280;font-size:13px">
+    Creado el: {fecha_creacion}
     </div>
     """, unsafe_allow_html=True)
 
-with logo_col:
+with logo:
     st.image("logo.png", width=90)
 
-df_mostrar = st.session_state.tabla.copy()
+df = st.session_state.tabla.copy()
 
-if not df_mostrar.empty:
-    df_mostrar["Fecha"] = pd.to_datetime(df_mostrar["Fecha"]).dt.strftime("%d/%m/%Y")
+if not df.empty:
+    df["Fecha"] = pd.to_datetime(df["Fecha"]).dt.strftime("%d/%m/%Y")
 
-st.table(df_mostrar)
+tabla_estilo = (
+    df.style
+    .hide(axis="index")
+    .set_properties(**{
+        "text-align":"center",
+        "color":"black",
+        "background-color":"white",
+        "font-size":"13px"
+    })
+    .set_table_styles([
+        {"selector":"th","props":[
+            ("background","#f3f4f6"),
+            ("color","black"),
+            ("font-weight","bold"),
+            ("text-align","center"),
+            ("padding","4px"),
+            ("border","1px solid #d1d5db")
+        ]},
+        {"selector":"td","props":[
+            ("padding","4px"),
+            ("border","1px solid #e5e7eb")
+        ]}
+    ])
+    .applymap(color_estado, subset=["Estado"])
+)
+
+st.markdown(tabla_estilo.to_html(), unsafe_allow_html=True)
+
+st.markdown('</div>', unsafe_allow_html=True)
 
 # =============================
 # GENERAR IMAGEN
@@ -225,9 +254,8 @@ st.table(df_mostrar)
 
 def generar_imagen(df):
 
-    fig, ax = plt.subplots(figsize=(12, len(df)*0.5 + 1))
+    fig,ax = plt.subplots(figsize=(12,len(df)*0.5+1))
 
-    ax.axis('tight')
     ax.axis('off')
 
     tabla = ax.table(
@@ -238,26 +266,30 @@ def generar_imagen(df):
 
     tabla.auto_set_font_size(False)
     tabla.set_fontsize(9)
-    tabla.scale(1,1.5)
+    tabla.scale(1,1.4)
 
     return fig
+
+def fig_to_png(fig):
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png", bbox_inches="tight")
+    buf.seek(0)
+    return buf
 
 # =============================
 # BOTON IMAGEN
 # =============================
 
-if not df_mostrar.empty:
+if not df.empty:
 
-    fig = generar_imagen(df_mostrar)
+    fig = generar_imagen(df)
 
     st.download_button(
         "📷 Descargar imagen del panorama",
         data=fig_to_png(fig),
-        file_name=f"panorama_cosecha_{fecha_creacion}.png",
+        file_name=f"panorama_{fecha_creacion}.png",
         mime="image/png"
     )
-
-st.markdown('</div>', unsafe_allow_html=True)
 
 # =============================
 # RESUMEN
