@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from datetime import date, datetime
+import matplotlib.pyplot as plt
 
 st.set_page_config(page_title="Panorama de cosecha", page_icon="🌾", layout="wide")
 
@@ -89,7 +90,7 @@ if "tabla" not in st.session_state:
 logo_col, titulo_col = st.columns([1.5,6])
 
 with logo_col:
-    st.image("logo.png", width=220)
+    st.image("logo.png", width=200)
 
 with titulo_col:
     st.markdown(f"""
@@ -189,77 +190,72 @@ with b3:
 st.markdown('</div>', unsafe_allow_html=True)
 
 # =============================
-# COLOR ESTADO
-# =============================
-
-def color_estado(val):
-
-    if val == "Confirmado con Cupo":
-        return "background-color:#d1fae5; font-weight:600;"
-
-    elif val == "Confirmado sin Cupo":
-        return "background-color:#fef3c7; font-weight:600;"
-
-    elif val == "Solicitado":
-        return "background-color:#fef3c7; font-weight:600;"
-
-    elif val == "Cancelado":
-        return "background-color:#fee2e2; font-weight:600;"
-
-    return ""
-
-# =============================
 # TABLA PRINCIPAL
 # =============================
 
 st.markdown('<div class="card">', unsafe_allow_html=True)
-st.markdown('<div class="section-title">Panorama cargado</div>', unsafe_allow_html=True)
 
-tabla_col, logo_col = st.columns([7,1])
+titulo_col, logo_col = st.columns([6,1])
 
-with tabla_col:
-
-    df_mostrar = st.session_state.tabla.copy()
-
-    if not df_mostrar.empty:
-        df_mostrar["Fecha"] = pd.to_datetime(df_mostrar["Fecha"]).dt.strftime("%d/%m/%Y")
-
-    tabla_estilo = (
-        df_mostrar.style
-        .hide(axis="index")
-        .set_properties(**{
-            "text-align": "center",
-            "font-size": "13px"
-        })
-        .set_table_styles([
-            {
-                "selector": "th",
-                "props": [
-                    ("background-color", "#f3f4f6"),
-                    ("color", "#000000"),
-                    ("font-weight", "bold"),
-                    ("text-align", "center"),
-                    ("border", "1px solid #d1d5db"),
-                    ("padding", "4px")
-                ]
-            },
-            {
-                "selector": "td",
-                "props": [
-                    ("background-color", "#ffffff"),
-                    ("color", "#000000"),
-                    ("border", "1px solid #e5e7eb"),
-                    ("padding", "4px")
-                ]
-            }
-        ])
-        .applymap(color_estado, subset=["Estado"])
-    )
-
-    st.markdown(tabla_estilo.to_html(), unsafe_allow_html=True)
+with titulo_col:
+    st.markdown(f"""
+    <div style="margin-bottom:10px">
+        <div style="font-weight:700;font-size:18px;color:#006651">
+        Distribución de camiones
+        </div>
+        <div style="color:#6b7280;font-size:13px">
+        Creado el: {fecha_creacion}
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
 with logo_col:
-    st.image("logo.png", width=120)
+    st.image("logo.png", width=90)
+
+df_mostrar = st.session_state.tabla.copy()
+
+if not df_mostrar.empty:
+    df_mostrar["Fecha"] = pd.to_datetime(df_mostrar["Fecha"]).dt.strftime("%d/%m/%Y")
+
+st.table(df_mostrar)
+
+# =============================
+# GENERAR IMAGEN
+# =============================
+
+def generar_imagen(df):
+
+    fig, ax = plt.subplots(figsize=(12, len(df)*0.5 + 1))
+
+    ax.axis('tight')
+    ax.axis('off')
+
+    tabla = ax.table(
+        cellText=df.values,
+        colLabels=df.columns,
+        loc='center'
+    )
+
+    tabla.auto_set_font_size(False)
+    tabla.set_fontsize(9)
+    tabla.scale(1,1.5)
+
+    return fig
+
+# =============================
+# BOTON IMAGEN
+# =============================
+
+if not df_mostrar.empty:
+
+    fig = generar_imagen(df_mostrar)
+
+    st.download_button(
+        "📷 Descargar imagen del panorama",
+        data=fig_to_png(fig),
+        file_name=f"panorama_cosecha_{fecha_creacion}.png",
+        mime="image/png"
+    )
 
 st.markdown('</div>', unsafe_allow_html=True)
 
