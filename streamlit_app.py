@@ -79,7 +79,7 @@ with logo_col:
     st.image("logo.png", width=200)
 
 with titulo_col:
-    st.markdown(f"""
+    st.markdown("""
     <div style="padding-top:20px">
         <div class="report-title">Panorama de cosecha</div>
         <div class="report-subtitle">Distribución de camiones</div>
@@ -202,7 +202,7 @@ with titulo:
     <div style="font-weight:700;font-size:18px;color:#006651">
     Distribución de camiones
     </div>
-    <div style="color:#374151;font-size:14px;font-weight:700">
+    <div style="font-weight:700;font-size:14px;color:#374151">
     Creado el: {fecha_creacion}
     </div>
     """, unsafe_allow_html=True)
