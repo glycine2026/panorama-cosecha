@@ -1,8 +1,6 @@
 import streamlit as st
 import pandas as pd
 from datetime import date, datetime
-import matplotlib.pyplot as plt
-import io
 
 st.set_page_config(page_title="Panorama de cosecha", page_icon="🌾", layout="wide")
 
@@ -85,7 +83,6 @@ with titulo_col:
     <div style="padding-top:20px">
         <div class="report-title">Panorama de cosecha</div>
         <div class="report-subtitle">Distribución de camiones</div>
-        <div class="report-subtitle">Creado el: {fecha_creacion}</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -205,7 +202,7 @@ with titulo:
     <div style="font-weight:700;font-size:18px;color:#006651">
     Distribución de camiones
     </div>
-    <div style="color:#6b7280;font-size:13px">
+    <div style="color:#374151;font-size:14px;font-weight:700">
     Creado el: {fecha_creacion}
     </div>
     """, unsafe_allow_html=True)
@@ -247,49 +244,6 @@ tabla_estilo = (
 st.markdown(tabla_estilo.to_html(), unsafe_allow_html=True)
 
 st.markdown('</div>', unsafe_allow_html=True)
-
-# =============================
-# GENERAR IMAGEN
-# =============================
-
-def generar_imagen(df):
-
-    fig,ax = plt.subplots(figsize=(12,len(df)*0.5+1))
-
-    ax.axis('off')
-
-    tabla = ax.table(
-        cellText=df.values,
-        colLabels=df.columns,
-        loc='center'
-    )
-
-    tabla.auto_set_font_size(False)
-    tabla.set_fontsize(9)
-    tabla.scale(1,1.4)
-
-    return fig
-
-def fig_to_png(fig):
-    buf = io.BytesIO()
-    fig.savefig(buf, format="png", bbox_inches="tight")
-    buf.seek(0)
-    return buf
-
-# =============================
-# BOTON IMAGEN
-# =============================
-
-if not df.empty:
-
-    fig = generar_imagen(df)
-
-    st.download_button(
-        "📷 Descargar imagen del panorama",
-        data=fig_to_png(fig),
-        file_name=f"panorama_{fecha_creacion}.png",
-        mime="image/png"
-    )
 
 # =============================
 # RESUMEN
