@@ -104,14 +104,14 @@ with titulo_col:
 
 df_actual = st.session_state.tabla
 
-total_cupos = int(df_actual["Cupos"].sum()) if not df_actual.empty else 0
+total_cupos = pd.to_numeric(df_actual["Cupos"], errors="coerce").sum()
 total_registros = len(df_actual)
 total_campos = df_actual["Campo"].nunique() if not df_actual.empty else 0
 
 m1, m2, m3 = st.columns(3)
 
 with m1:
-    st.metric("Total de cupos", total_cupos)
+    st.metric("Total de cupos", int(total_cupos) if not pd.isna(total_cupos) else 0)
 
 with m2:
     st.metric("Registros cargados", total_registros)
@@ -156,8 +156,8 @@ if actividad == "Camión":
 
 else:
 
-    cupos = None
-    fecha_cupo = None
+    cupos = ""
+    fecha_cupo = ""
     titular = ""
     estado = ""
 
@@ -227,9 +227,10 @@ with logo:
     st.image("logo.png", width=90)
 
 df = st.session_state.tabla.copy()
+df = df.fillna("")
 
 if not df.empty:
-    df["Fecha de carga"] = pd.to_datetime(df["Fecha de carga"]).dt.strftime("%d/%m/%Y")
+    df["Fecha de carga"] = pd.to_datetime(df["Fecha de carga"], errors="coerce").dt.strftime("%d/%m/%Y")
 
 tabla_estilo = (
     df.style
