@@ -51,12 +51,16 @@ st.markdown("""
 campos_loc = pd.read_excel("maestros.xlsx", sheet_name="campos_localidades")
 socios_df = pd.read_excel("maestros.xlsx", sheet_name="socios")
 especies_df = pd.read_excel("maestros.xlsx", sheet_name="especies")
-estado_df = pd.read_excel("maestros.xlsx", sheet_name="estado_cupo")
 
 campos = sorted(campos_loc["Campo"].dropna().unique())
-socios = sorted(socios_df["Socio"].dropna().unique())
+socios = [""] + sorted(socios_df["Socio"].dropna().unique())
 especies = sorted(especies_df["Especie"].dropna().unique())
-estados = sorted(estado_df["Estado"].dropna().unique())
+
+estados = [
+    "Confirmado planta",
+    "Confirmado puerto",
+    "Solicitado"
+]
 
 # =============================
 # TABLA EN MEMORIA
@@ -64,9 +68,17 @@ estados = sorted(estado_df["Estado"].dropna().unique())
 
 if "tabla" not in st.session_state:
     st.session_state.tabla = pd.DataFrame(columns=[
-        "Fecha","Campo","Localidad","Especie",
-        "Transporte","Destino","Cupos","Socio",
-        "Estado","Observaciones"
+        "Fecha de carga",
+        "Campo",
+        "Localidad",
+        "Especie",
+        "Actividad",
+        "Destino",
+        "Cupos",
+        "Fecha de cupo",
+        "Titular",
+        "Estado",
+        "Observaciones"
     ])
 
 # =============================
@@ -119,21 +131,36 @@ st.markdown('<div class="section-title">Carga de datos</div>', unsafe_allow_html
 c1,c2,c3 = st.columns(3)
 
 with c1:
-    fecha = st.date_input("Fecha", value=date.today())
+    fecha_carga = st.date_input("Fecha de carga", value=date.today())
     campo = st.selectbox("Campo", campos)
     especie = st.selectbox("Especie", especies)
 
 with c2:
     localidades = campos_loc[campos_loc["Campo"]==campo]["Localidad"].dropna().unique()
     localidad = st.selectbox("Localidad", sorted(localidades))
-    socio = st.selectbox("Socio", socios)
+    actividad = st.selectbox("Actividad", ["Camión","Bolsón"])
 
 with c3:
-    transporte = st.selectbox("Tipo transporte", ["Camión","Bolsón"])
     destino = st.text_input("Destino")
-    cupos = st.number_input("Cupos", min_value=0, step=1)
 
-estado = st.selectbox("Estado del cupo", estados)
+# =============================
+# CAMPOS CONDICIONALES
+# =============================
+
+if actividad == "Camión":
+
+    cupos = st.number_input("Cupos", min_value=0, step=1)
+    fecha_cupo = st.date_input("Fecha de cupo", value=date.today())
+    titular = st.selectbox("Titular", socios)
+    estado = st.selectbox("Estado del cupo", estados)
+
+else:
+
+    cupos = None
+    fecha_cupo = None
+    titular = ""
+    estado = ""
+
 observaciones = st.text_input("Observaciones")
 
 # =============================
@@ -146,10 +173,19 @@ with b1:
     if st.button("Agregar fila"):
 
         nueva = pd.DataFrame(
-            [[fecha,campo,localidad,especie,transporte,destino,cupos,socio,estado,observaciones]],
+            [[fecha_carga,campo,localidad,especie,actividad,destino,cupos,fecha_cupo,titular,estado,observaciones]],
             columns=[
-                "Fecha","Campo","Localidad","Especie","Transporte",
-                "Destino","Cupos","Socio","Estado","Observaciones"
+                "Fecha de carga",
+                "Campo",
+                "Localidad",
+                "Especie",
+                "Actividad",
+                "Destino",
+                "Cupos",
+                "Fecha de cupo",
+                "Titular",
+                "Estado",
+                "Observaciones"
             ]
         )
 
@@ -168,26 +204,6 @@ with b3:
         st.rerun()
 
 st.markdown('</div>', unsafe_allow_html=True)
-
-# =============================
-# COLOR ESTADO
-# =============================
-
-def color_estado(val):
-
-    if val == "Confirmado con Cupo":
-        return "background-color:#d1fae5;font-weight:bold"
-
-    if val == "Confirmado sin Cupo":
-        return "background-color:#fef3c7;font-weight:bold"
-
-    if val == "Solicitado":
-        return "background-color:#fef3c7;font-weight:bold"
-
-    if val == "Cancelado":
-        return "background-color:#fee2e2;font-weight:bold"
-
-    return ""
 
 # =============================
 # TABLA PRINCIPAL
@@ -213,7 +229,7 @@ with logo:
 df = st.session_state.tabla.copy()
 
 if not df.empty:
-    df["Fecha"] = pd.to_datetime(df["Fecha"]).dt.strftime("%d/%m/%Y")
+    df["Fecha de carga"] = pd.to_datetime(df["Fecha de carga"]).dt.strftime("%d/%m/%Y")
 
 tabla_estilo = (
     df.style
@@ -238,32 +254,9 @@ tabla_estilo = (
             ("border","1px solid #e5e7eb")
         ]}
     ])
-    .applymap(color_estado, subset=["Estado"])
 )
 
 st.markdown(tabla_estilo.to_html(), unsafe_allow_html=True)
-
-st.markdown('</div>', unsafe_allow_html=True)
-
-# =============================
-# RESUMEN
-# =============================
-
-st.markdown('<div class="card">', unsafe_allow_html=True)
-st.markdown('<div class="section-title">Resumen por socio y especie</div>', unsafe_allow_html=True)
-
-if not st.session_state.tabla.empty:
-
-    resumen = (
-        st.session_state.tabla
-        .groupby(["Fecha","Socio","Especie"])["Cupos"]
-        .sum()
-        .reset_index()
-    )
-
-    resumen["Fecha"] = pd.to_datetime(resumen["Fecha"]).dt.strftime("%d/%m/%Y")
-
-    st.table(resumen)
 
 st.markdown('</div>', unsafe_allow_html=True)
 
@@ -281,3 +274,4 @@ st.download_button(
     f"panorama_cosecha_{fecha_archivo}.csv",
     "text/csv"
 )
+
